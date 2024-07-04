@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+
+
+{% load  static %}
+
+{%block content%}
+{% load cartfilter%}
+<style>
+.img-cart{
+    width:40px;
+    height:50px;
+}
+.select-tag{
+    border-radius:5px;
+    background:rgba(255,255,255,.4);
+    width:80px;
+}
+.table{
+    background:rgba(255,255,255,.4);
+    box-shadow:0 5px 5px rgba(0,0,0,.2);
+    border-radius:20px;
+}
+
+</style>
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+    function getval1(quantity,product_id)
+    { 
+        var size =document.getElementById('size').value;
+        console.log(size);
+        console.log(quantity);
+        console.log(product_id);
+    }   
+    
+    
+    
+    function getval(size,product_id)
+    {   
+        alert(product_id);
+        
+        $.ajax({
+            url:'/order/size/',
+            type:'post',
+            data:{
+                product_id:product_id,
+                size:size,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+        }).done(function(result){
+           if(size=='size_m' || size=='size_l' || size=='size_xl')
+           {
+               var id = product_id.toString();
+               var final = id.concat('shirt'); // final is a id // same as select tag include id 
+               document.getElementById(final).innerHTML = null; //set null in select tag
+               var select = document.getElementById(final); // DOM concept is use here
+               var df = document.createDocumentFragment();
+               for(var i = 1;i<=result;i++)
+               {
+                   var option = document.createElement('option');
+                   option.value = i;
+                   option.appendChild(document.createTextNode(i));
+                   df.appendChild(option);
+               }
+               select.appendChild(df);
+               
+           }
+           else if(size=='size_28' || size=='size_30' || size=='size_32' || size=='size_34')
+           {
+                var id = product_id.toString();
+                var final = id.concat('pant');
+                document.getElementById(final).innerHTML = null;
+                var select = document.getElementById(final);
+                var df = document.createDocumentFragment();
+                for(var i=1;i<=result;i++)
+                {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.appendChild(document.createTextNode(i));
+                    df.appendChild(option);
+                }
+                select.appendChild(df);
+               
+           }
+           else
+           {
+               var id = product_id.toString();
+               var final = id.concat('shoe');
+               document.getElementById(final).innerHTML = null;
+               var select = document.getElementById(final);
+               var df = document.createDocumentFragment();
+                for(var i=1;i<=result;i++)
+                {
+                    var option = document.createElement('option');
+                    option.value = i;
+                    option.appendChild(document.createTextNode(i));
+                    df.appendChild(option);
+                }
+                select.appendChild(df);
+           }
+        }).fail(function(result){
+            alert(result);
+        })
+
+        
+    }
+
+    
+
+    $(document).on('click','.remove',function(e){
+        e.preventDefault();
+        if(confirm('Remove in Cart...!'))
+        {
+            var product_id = $(this).data('id');
+            $.ajax({
+                url:'/homecart/',
+                type:'post',
+                data:{
+                    product_id:product_id,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success:function(result){
+                    location.reload();
+                }
+            });
+        }
+
+    });
+
+    
+
+</script>
+    <div class="container">
+        <form action="{% url 'demo' %}" method="POST">
+        {% csrf_token %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pro in shirt_data%}
+                   
+                    <tr>
+                        <td><img class="img-cart rounded"src="{{pro.image.url}}"></td>
+                        <td>{{pro.name}}</td>
+                        <td>{{pro|product_price}}</td>
+                        <td>
+                            <select class="select-tag" onchange="getval(this.value,{{pro.id}});"id="size" value="this.value">
+                                <option></option>
+                                <option value="size_m">M</option>
+                                <option value="size_l">L</option>
+                                <option value="size_xl">XL</option>
+                            </select>
+                            
+                        </td>
+                        <td>
+                        <select class="select-tag" id="{{pro|create_id:'shirt'}}" onchange="getval1(this.value,{{pro.id}})"name="quantity"></select>
+                        
+                        </td>
+                        
+                        <td>Total</td>
+                        <td><button type="button" data-id="{{pro.id}},Shirt"class="btn btn-sm remove"><i class="fa fa-remove"></i></td>
+                    </tr>
+                    
+                {%endfor%}
+
+
+                    {% for pro in pant_data%}
+                    <tr>
+                        <td><img class="img-cart rounded"src="{{pro.image.url}}"></td>
+                        <td>{{pro.name}}</td>
+                        <td>{{pro|product_price}}</td>
+                        <td>
+                            <select class="select-tag" onchange="getval(this.value,{{pro.id}});" name="size">
+                                <option></option>
+                                <option value="size_28">28</option>
+                                <option value="size_30">30</option>
+                                <option value="size_32">32</option>
+                                <option value="size_34">34</option>
+                             </select>
+                            
+                        </td>
+                        <td>
+                        <select class="select-tag" id="{{pro|create_id:'pant'}}" name="quantity"></select>
+                            
+                        </td>
+                        
+                        <td>Total</td>
+                        <td><button type="button" data-id="{{pro.id}},Pant"class="btn btn-sm remove"><i class="fa fa-remove"></i></td>
+                    </tr>
+                {%endfor%}
+
+                {% for pro in shoe_data%}
+                    <tr>
+                        <td><img class="img-cart rounded"src="{{pro.image.url}}"></td>
+                        <td>{{pro.name}}</td>
+                        <td>{{pro|product_price}}</td>
+                        <td>
+                            <select class="select-tag" onchange="getval(this.value,{{pro.id}});" name="size">
+                                <option></option>
+
+                                <option value="size_7">7</option>
+                                <option value="size_8">8</option>
+                                <option value="size_9">9</option>
+                                <option value="size_10">10</option>
+                            </select>
+                            
+                        </td>
+                        <td>
+                        <select class="select-tag" id="{{pro|create_id:'shoe'}}" name="quantity"></select>
+                            
+                        </td>
+                        
+                        <td>Total</td>
+                        <td><button type="button" data-id="{{pro.id}},Shoe"class="btn btn-sm remove"><i class="fa fa-remove"></i></td>
+                    </tr>
+                {%endfor%}
+
+
+
+                </tbody>
+            </table>
+            <input type="submit" class="btn btn-sm btn-outline-success"value="CheckOut">
+        </form>
+    </div>
+    
+ 
+
+{%endblock content%}
